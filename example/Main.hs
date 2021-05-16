@@ -1,6 +1,5 @@
 module Main where
 
-import Control.Monad.Cont
 import Data.Text
 import Database.MongoDB (ObjectId, at)
 import Kuery.Language.Base
