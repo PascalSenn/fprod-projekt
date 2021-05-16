@@ -1,14 +1,56 @@
+-- Contains all the base types of Kuery
 module Kuery.Language.Base where
 
 import Kuery.Language.Value
 
+-- A field that can be selected in a query
 newtype Field = Field String deriving (Show)
 
-data Filter = Eq Field Value | Gt Field Value | And Filter Filter deriving (Show)
+-- A filter that is used to express the `where` condition
+data Filter
+  = Eq Field Value
+  | Ne Field Value
+  | Gt Field Value
+  | Gte Field Value
+  | Lt Field Value
+  | Lte Field Value
+  | In Field [Value]
+  | Contains Field Value
+  | Or Filter Filter
+  | And Filter Filter
+  deriving (Show)
 
-data OrderBy = Asc Field Value | Desc Field Value deriving (Show)
+data OrderBy = Ascending Field | Descending Field deriving (Show)
 
-data Query = Query {selections :: [Field], filters :: [Filter], source :: Maybe String} deriving (Show)
+data Order = Asc String | Desc String deriving (Show)
 
-_query :: Query
-_query = Query {selections = [], filters = [], source = Nothing}
+data Setter = Setter Field Value deriving (Show)
+
+data VariableValue = VariableValue String Value deriving (Show)
+
+data Query
+  = Selection
+      { selections :: [Field],
+        skip :: Maybe Value,
+        limit :: Maybe Value,
+        filters :: [Filter],
+        ordering :: [OrderBy],
+        target :: Maybe String
+      }
+  | Update
+      { filters :: [Filter],
+        update :: [Setter],
+        target :: Maybe String
+      }
+  | Insert
+      { insert :: [[Setter]],
+        target :: Maybe String
+      }
+  | Delete
+      { filters :: [Filter],
+        target :: Maybe String
+      }
+  deriving (Show)
+
+var :: QueryValue a => String -> a -> VariableValue
+var field value = VariableValue field (format value)
