@@ -18,7 +18,7 @@ common common-properties
 
 library
   import:              common-properties
-  exposed-modules:     Kuery.Result, Kuery.Providers.Mongo, Kuery.Helpers, Kuery.Language.Value, Kuery.Language.Operators, Kuery.Language.Base, Kuery.Operations, Kuery
+  exposed-modules:     Kuery.Result, Kuery.Connection, Kuery.Providers.Mongo.Base, Kuery.Monad.Providers.Mongo, Kuery.Providers.Mongo, Kuery.Helpers, Kuery.Language.Value, Kuery.Language.Operators, Kuery.Language.Base, Kuery.Monad.Operations, Kuery.Operations, Kuery
   build-depends:       
   hs-source-dirs:      lib
 

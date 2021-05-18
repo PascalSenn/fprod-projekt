@@ -1,38 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Kuery.Providers.Mongo (execute, connect, MongoConfig, logQueries, host, databaseName, Result) where
+module Kuery.Providers.Mongo (execute, Result) where
 
 import Control.Monad.Cont
 import Data.Text (pack)
 import qualified Database.MongoDB as Mongo
 import Kuery.Language.Base
 import Kuery.Language.Value
+import Kuery.Providers.Mongo.Base
 import Kuery.Result
+import Kuery.Connection
 
-execute :: MongoConfig -> Query -> [VariableValue] -> IO (Result [Mongo.Document])
-execute con q variables =
+execute :: Query -> [VariableValue] -> MongoConnection -> IO (Result [Mongo.Document])
+execute q variables con =
   do
-    let name = pack $ databaseName con
-    let hostName = host con
+    let run = executor con
     let l = variableLookup variables
-    pipe <- Mongo.connect $ Mongo.host hostName
-    let run act = Mongo.access pipe Mongo.master name act
     case createQuery con l q of
       Error a -> do return (Error a)
       Result query -> do
         res <- run query
         return (Result res)
 
-connect :: String -> String -> MongoConfig
-connect h d = MongoConfig {host = h, databaseName = d, logQueries = False}
-
-data MongoConfig = MongoConfig
-  { host :: String,
-    databaseName :: String,
-    logQueries :: Bool
-  }
-
-createQuery :: MongoConfig -> VariableLookup -> Query -> Result (Mongo.Action IO [Mongo.Document])
+createQuery :: MongoConnection -> VariableLookup -> Query -> Result (Mongo.Action IO [Mongo.Document])
 createQuery config l q =
   case q of
     -- Selection
@@ -53,7 +43,7 @@ createQuery config l q =
           )
       where
         execute' query = do
-          if logQueries config
+          if logQueries (db config)
             then do
               liftIO $ do
                 putStrLn "[Select]"
@@ -71,7 +61,7 @@ createQuery config l q =
       return (execute' query modify >>= \() -> do pure [])
       where
         execute' query modify = do
-          if logQueries config
+          if logQueries (db config)
             then do
               liftIO $ do
                 putStrLn "[Update]"
@@ -89,7 +79,7 @@ createQuery config l q =
       return (execute' t modify >> pure [])
       where
         execute' t modify = do
-          if logQueries config
+          if logQueries (db config)
             then do
               liftIO $ do
                 putStrLn "[Insert]"
@@ -106,7 +96,7 @@ createQuery config l q =
       return (execute' query >>= \() -> pure [])
       where
         execute' query = do
-          if logQueries config
+          if logQueries (db config)
             then do
               liftIO $ do
                 putStrLn "[Delete]"

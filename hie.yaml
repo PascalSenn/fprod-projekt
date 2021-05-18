@@ -1,0 +1,12 @@
+cradle:
+  multi:
+    - path: "lib"
+      config:
+        cradle:
+          cabal:
+              component: "lib:kuery"
+    - path: "example"
+      config:
+        cradle:
+          cabal:
+              component: "kuery:exe:example"
