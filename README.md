@@ -31,4 +31,9 @@ _where2 filter = do
 _query2 = Query {selections = [], filters = [], source = Nothing}
 
 --- test2 = do _select2 ["foo", "bar"] <*> _from2 "collections" <*> _where Eq (Field "foo") (ValueString "bar")
+test2 = 
+  do 
+    _ <- _select2 ["foo", "bar"] 
+    _ <- _from2 "collections" 
+    _ <- _where Eq (Field "foo") (ValueString "bar")
 ```
