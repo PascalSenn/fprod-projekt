@@ -96,3 +96,6 @@ _delete =
     put $ do
       let new = Operations._delete
       Result new
+
+_evaluate :: State (Result Query) (Result Query)
+_evaluate = do Control.Monad.State.get

@@ -1,109 +1,99 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Kuery.Providers.Mongo (execute, Result) where
+module Kuery.Providers.Mongo (executeMongoQuery ) where
 
 import Control.Monad.Cont
 import Data.Text (pack)
 import qualified Database.MongoDB as Mongo
 import Kuery.Language.Base
 import Kuery.Language.Value
-import Kuery.Providers.Mongo.Base
 import Kuery.Result
 import Kuery.Connection
 
-execute :: Query -> [VariableValue] -> MongoConnection -> IO (Result [Mongo.Document])
-execute q variables con =
-  do
-    let run = executor con
+executeMongoQuery :: DatabaseConnection -> [VariableValue] -> Query -> Result (Mongo.Action IO [Mongo.Document])
+executeMongoQuery config variables q =
+  do 
     let l = variableLookup variables
-    case createQuery con l q of
-      Error a -> do return (Error a)
-      Result query -> do
-        res <- run query
-        return (Result res)
+    case q of
+      -- Selection
+      Selection selections' skip' limit' filters' ordering' target' ->
+        do
+          t <- readTarget target'
+          select <- createSelect l filters'
+          query <-
+            Result
+              (Mongo.select select (pack t))
+                { Mongo.project = createProjection selections',
+                  Mongo.sort = createSort ordering'
+                }
+              >>= applySkip l skip'
+              >>= applyLimit l limit'
+          return
+            ( execute' query >>= Mongo.rest
+            )
+        where
+          execute' query = do
+            if logQueries config
+              then do
+                liftIO $ do
+                  putStrLn "[Select]"
+                  putStrLn "Query="
+                  print query
+              else pure ()
+            Mongo.find query
 
-createQuery :: MongoConnection -> VariableLookup -> Query -> Result (Mongo.Action IO [Mongo.Document])
-createQuery config l q =
-  case q of
-    -- Selection
-    Selection selections' skip' limit' filters' ordering' target' ->
-      do
+      -- Update
+      Update filters' update' target' -> do
         t <- readTarget target'
         select <- createSelect l filters'
-        query <-
-          Result
-            (Mongo.select select (pack t))
-              { Mongo.project = createProjection selections',
-                Mongo.sort = createSort ordering'
-              }
-            >>= applySkip l skip'
-            >>= applyLimit l limit'
-        return
-          ( execute' query >>= Mongo.rest
-          )
-      where
-        execute' query = do
-          if logQueries (db config)
-            then do
-              liftIO $ do
-                putStrLn "[Select]"
-                putStrLn "Query="
-                print query
-            else pure ()
-          Mongo.find query
+        modify <- createModify l update'
+        let query = Mongo.select select (pack t)
+        return (execute' query modify >>= \() -> do pure [])
+        where
+          execute' query modify = do
+            if logQueries config
+              then do
+                liftIO $ do
+                  putStrLn "[Update]"
+                  putStrLn "Query="
+                  print query
+                  putStrLn "Update="
+                  print modify
+              else pure ()
+            Mongo.modify query modify
 
-    -- Update
-    Update filters' update' target' -> do
-      t <- readTarget target'
-      select <- createSelect l filters'
-      modify <- createModify l update'
-      let query = Mongo.select select (pack t)
-      return (execute' query modify >>= \() -> do pure [])
-      where
-        execute' query modify = do
-          if logQueries (db config)
-            then do
-              liftIO $ do
-                putStrLn "[Update]"
-                putStrLn "Query="
-                print query
-                putStrLn "Update="
-                print modify
-            else pure ()
-          Mongo.modify query modify
+      -- Insert
+      Insert insert' target' -> do
+        t <- readTarget target'
+        modify <- mapM (createInsert l) insert'
+        return (execute' t modify >> pure [])
+        where
+          execute' t modify = do
+            if logQueries config
+              then do
+                liftIO $ do
+                  putStrLn "[Insert]"
+                  putStrLn "Update="
+                  print modify
+              else pure ()
+            Mongo.insertAll (pack t) modify
 
-    -- Insert
-    Insert insert' target' -> do
-      t <- readTarget target'
-      modify <- mapM (createInsert l) insert'
-      return (execute' t modify >> pure [])
-      where
-        execute' t modify = do
-          if logQueries (db config)
-            then do
-              liftIO $ do
-                putStrLn "[Insert]"
-                putStrLn "Update="
-                print modify
-            else pure ()
-          Mongo.insertAll (pack t) modify
-
-    -- Delete
-    Delete filters' target' -> do
-      t <- readTarget target'
-      select <- createSelect l filters'
-      let query = Mongo.select select (pack t)
-      return (execute' query >>= \() -> pure [])
-      where
-        execute' query = do
-          if logQueries (db config)
-            then do
-              liftIO $ do
-                putStrLn "[Delete]"
-                putStrLn "query="
-                print query
-            else pure ()
-          Mongo.delete query
+      -- Delete
+      Delete filters' target' -> do
+        t <- readTarget target'
+        select <- createSelect l filters'
+        let query = Mongo.select select (pack t)
+        return (execute' query >>= \() -> pure [])
+        where
+          execute' query = do
+            if logQueries config
+              then do
+                liftIO $ do
+                  putStrLn "[Delete]"
+                  putStrLn "query="
+                  print query
+              else pure ()
+            Mongo.delete query
 
 readTarget :: Maybe String -> Result String
 readTarget (Just target') = Result target'

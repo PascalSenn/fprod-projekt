@@ -7,7 +7,6 @@ import Kuery.Language.Base
 import Kuery.Language.Operators
 import Kuery.Language.Value
 import Kuery.Monad.Operations
-import Kuery.Monad.Providers.Mongo
 import Kuery.Providers.Mongo.Base
 import Kuery.Result
 
@@ -16,11 +15,13 @@ pageUsersM skip'' limit'' = do
   let limit' = if limit'' < 10 then 10 else limit''
   let skip' = if skip'' < 0 then 0 else skip''
   putStrLn ("Users " ++ show skip' ++ " - " ++ show (skip' + limit'))
+
   res <-
     connect "127.0.0.1" "kuery"
       >>= enableLogging
       >>= toMongo
       >>= executeM userPageQuery [var "skip" skip', var "limit" limit']
+
   case res of
     Error a -> putStrLn a
     Result res' -> do

@@ -1,4 +1,4 @@
-module Kuery.Helpers where
+module Kuery.Helpers (merge) where
 
 merge :: [a] -> [a] -> [a]
 merge xs [] = xs
