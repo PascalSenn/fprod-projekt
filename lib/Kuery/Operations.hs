@@ -9,7 +9,7 @@ _select fields =
     { selections = map Field fields,
       skip = Nothing,
       limit = Nothing,
-      filters = [],
+      filters = Nothing,
       target = Nothing,
       ordering = []
     }
@@ -18,7 +18,7 @@ _from :: Query -> String -> Query
 _from query src = query {target = Just src}
 
 _where :: Query -> Filter -> Query
-_where query f = query {filters = f : filters query}
+_where query f = query {filters = Just f}
 
 _skip :: SkipOrLimit a => Query -> a -> Query
 _skip query s = query {skip = Just (get s)}
@@ -47,7 +47,7 @@ _update :: String -> Query
 _update t =
   Update
     { update = [],
-      filters = [],
+      filters = Nothing,
       target = Just t
     }
 
@@ -57,7 +57,7 @@ _set query values = query {update = values}
 _delete :: Query
 _delete =
   Delete
-    { filters = [],
+    { filters = Nothing,
       target = Nothing
     }
 

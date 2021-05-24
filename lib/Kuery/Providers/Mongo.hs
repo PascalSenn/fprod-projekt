@@ -1,25 +1,25 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Kuery.Providers.Mongo (executeMongoQuery ) where
+module Kuery.Providers.Mongo (executeMongoQuery) where
 
 import Control.Monad.Cont
 import Data.Text (pack)
 import qualified Database.MongoDB as Mongo
+import Kuery.Connection
 import Kuery.Language.Base
 import Kuery.Language.Value
 import Kuery.Result
-import Kuery.Connection
 
 executeMongoQuery :: DatabaseConnection -> [VariableValue] -> Query -> Result (Mongo.Action IO [Mongo.Document])
 executeMongoQuery config variables q =
-  do 
+  do
     let l = variableLookup variables
     case q of
       -- Selection
-      Selection selections' skip' limit' filters' ordering' target' ->
+      Selection selections' skip' limit' filter' ordering' target' ->
         do
           t <- readTarget target'
-          select <- createSelect l filters'
+          select <- createSelect l filter'
           query <-
             Result
               (Mongo.select select (pack t))
@@ -43,9 +43,9 @@ executeMongoQuery config variables q =
             Mongo.find query
 
       -- Update
-      Update filters' update' target' -> do
+      Update filter' update' target' -> do
         t <- readTarget target'
-        select <- createSelect l filters'
+        select <- createSelect l filter'
         modify <- createModify l update'
         let query = Mongo.select select (pack t)
         return (execute' query modify >>= \() -> do pure [])
@@ -79,9 +79,9 @@ executeMongoQuery config variables q =
             Mongo.insertAll (pack t) modify
 
       -- Delete
-      Delete filters' target' -> do
+      Delete filter' target' -> do
         t <- readTarget target'
-        select <- createSelect l filters'
+        select <- createSelect l filter'
         let query = Mongo.select select (pack t)
         return (execute' query >>= \() -> pure [])
         where
@@ -145,8 +145,9 @@ createSingleModify l (Setter (Field f) v) = do
   value <- toBson l v
   return ("$set" Mongo.=: (pack f Mongo.=: value))
 
-createSelect :: VariableLookup -> [Filter] -> Result Mongo.Selector
-createSelect l = mapM (createSingleSelect l)
+createSelect :: VariableLookup -> Maybe Filter -> Result Mongo.Selector
+createSelect l Nothing = mapM (createSingleSelect l) []
+createSelect l (Just f) = mapM (createSingleSelect l) [f]
 
 createSingleSelect :: VariableLookup -> Filter -> Result Mongo.Field
 createSingleSelect lookup' (And l r) =
