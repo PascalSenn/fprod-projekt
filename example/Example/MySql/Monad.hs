@@ -14,7 +14,7 @@ pageUsersM_sql :: Int -> Int -> IO ()
 pageUsersM_sql skip'' limit'' = do
   let limit' = if limit'' < 10 then 10 else limit''
   let skip' = if skip'' < 0 then 0 else skip''
-  putStrLn ("asdf asd Users " ++ show skip' ++ " - " ++ show (skip' + limit'))
+  putStrLn ("Users " ++ show skip' ++ " - " ++ show (skip' + limit'))
 
   res <-
     connect "127.0.0.1" "kuery"

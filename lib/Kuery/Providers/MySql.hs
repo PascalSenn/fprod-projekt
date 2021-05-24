@@ -31,21 +31,23 @@ executeMySqlQuery variables q =
         orderBy <- createOrderBy ordering'
         limit <- createLimit l limit'
         offset <- createOffset l skip'
-        Result $ intercalate "" [select, from, _where', orderBy, limit, offset]
+        Result $ intercalate "" [select, from, _where', orderBy, limit, offset, ";"]
       -- Update
       Update filter' setter' target' -> do
         update <- createUpdate target'
         set <- createSet l setter'
         _where' <- createWhere l filter'
-        Result $ intercalate "" [update, set, _where']
+        Result $ intercalate "" [update, set, _where', ";"]
       -- Insert
       Insert insert' target' -> do
         insertInto <- createInsertInto target' insert'
         insertValues <- createInsertValues l insert'
-        Result $ intercalate "" [insertInto, insertValues]
+        Result $ intercalate "" [insertInto, insertValues, ";"]
       -- Delete
       Delete filter' target' -> do
-        return ""
+        deleteFrom <- createDeleteFrom target'
+        _where' <- createWhere l filter'
+        Result $ intercalate "" [deleteFrom, _where', ";"]
 
 createSelect :: [Field] -> Result String
 createSelect [] = Result "No fields specified for select."
@@ -193,3 +195,7 @@ createSingleInsertSetter :: VariableLookup -> Setter -> Result String
 createSingleInsertSetter l (Setter (Field f) v) = do
   val <- toSqlValue l v
   Result $ "`" ++ f ++ "` = " ++ val
+
+createDeleteFrom :: Maybe String -> Result String
+createDeleteFrom Nothing = Error "No target specified for delete statement."
+createDeleteFrom (Just t) = Result $ "DELETE FROM `" ++ t ++ "`"
