@@ -1,8 +1,8 @@
 module Kuery.Connection where
 
+import Control.Monad.State
 import Kuery.Language.Base
 import Kuery.Result
-import Control.Monad.State
 
 connect :: String -> String -> IO DatabaseConnection
 connect h d = do
@@ -25,13 +25,13 @@ data Executor a = Executor
     runM :: State (Result Query) () -> [VariableValue] -> IO (Result [a])
   }
 
-execute :: Query -> [VariableValue] -> Executor a -> IO (Result [a]) 
+execute :: Query -> [VariableValue] -> Executor a -> IO (Result [a])
 execute q v a = do
-    run a q v
+  run a q v
 
-executeM :: State (Result Query) () -> [VariableValue] -> Executor a -> IO (Result [a]) 
+executeM :: State (Result Query) () -> [VariableValue] -> Executor a -> IO (Result [a])
 executeM q v a = do
-    runM a q v
+  runM a q v
 
 enableLogging :: DatabaseConnection -> IO DatabaseConnection
 enableLogging config = do

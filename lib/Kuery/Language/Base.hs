@@ -33,6 +33,7 @@ data Query
       { selections :: [Field],
         skip :: Maybe Value,
         limit :: Maybe Value,
+        --TODO only one filter
         filters :: [Filter],
         ordering :: [OrderBy],
         target :: Maybe String
