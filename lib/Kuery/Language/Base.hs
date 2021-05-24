@@ -33,13 +33,12 @@ data Query
       { selections :: [Field],
         skip :: Maybe Value,
         limit :: Maybe Value,
-        --TODO only one filter
-        filters :: [Filter],
+        filters :: Maybe Filter,
         ordering :: [OrderBy],
         target :: Maybe String
       }
   | Update
-      { filters :: [Filter],
+      { filters :: Maybe Filter,
         update :: [Setter],
         target :: Maybe String
       }
@@ -48,7 +47,7 @@ data Query
         target :: Maybe String
       }
   | Delete
-      { filters :: [Filter],
+      { filters :: Maybe Filter,
         target :: Maybe String
       }
   deriving (Show)

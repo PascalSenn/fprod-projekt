@@ -24,23 +24,23 @@ executeMySqlQuery variables q =
     let l = variableLookup variables
     case q of
       -- Selection
-      Selection selections' skip' limit' filters' ordering' target' ->
+      Selection selections' skip' limit' filter' ordering' target' ->
         do
           select <- createSelect selections'
           from <- createFrom target'
-          _where <- createWhere l Nothing
+          _where <- createWhere l filter'
           orderBy <- createOrderBy ordering'
           limit <- createLimit l limit'
           offset <- createOffset l skip'
           Result $ intercalate "" [select, from, _where, orderBy, limit, offset]
       -- Update
-      Update filters' update' target' -> do
+      Update filter' update' target' -> do
         return ""
       -- Insert
       Insert insert' target' -> do
         return ""
       -- Delete
-      Delete filters' target' -> do
+      Delete filter' target' -> do
         return ""
 
 createSelect :: [Field] -> Result String
