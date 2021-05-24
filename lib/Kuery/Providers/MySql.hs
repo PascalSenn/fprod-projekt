@@ -40,7 +40,9 @@ executeMySqlQuery variables q =
         Result $ intercalate "" [update, set, _where']
       -- Insert
       Insert insert' target' -> do
-        return ""
+        insertInto <- createInsertInto target' insert'
+        insertValues <- createInsertValues l insert'
+        Result $ intercalate "" [insertInto, insertValues]
       -- Delete
       Delete filter' target' -> do
         return ""
@@ -152,5 +154,42 @@ createSet l setters = do
 
 createSingleSet :: VariableLookup -> Setter -> Result String
 createSingleSet l (Setter (Field f) v) = do
+  val <- toSqlValue l v
+  Result $ "`" ++ f ++ "` = " ++ val
+
+createInsertInto :: Maybe String -> [[Setter]] -> Result String
+createInsertInto Nothing _ = Error "No target specified for insert statement."
+createInsertInto (Just t) values = do
+  if null (head values)
+    then Error "No fields specified for insert statement"
+    else
+      if allEqual (map extractFieldNamesFromRows values)
+        then Result $ "INSERT INTO `" ++ t ++ "` (" ++ intercalate ", " (head (map extractFieldNamesFromRows values)) ++ ")"
+        else Error "Fields for specified insert values are not equal"
+
+allEqual :: Eq a => [a] -> Bool
+allEqual [] = True
+allEqual (x : xs) = all (== x) xs
+
+extractFieldNamesFromRows :: [Setter] -> [String]
+extractFieldNamesFromRows [] = []
+extractFieldNamesFromRows (x : xs) = extract' x : extractFieldNamesFromRows xs
+  where
+    extract' (Setter (Field f) _) = "`" ++ f ++ "`"
+
+createInsertValues :: VariableLookup -> [[Setter]] -> Result String
+createInsertValues _ [] = Error "No values specified for insert statement."
+createInsertValues l values = do
+  x <- mapM (createInsertRow l) values
+  Result $ " VALUES " ++ intercalate ", " x
+
+createInsertRow :: VariableLookup -> [Setter] -> Result String
+createInsertRow _ [] = Error "No fields specified for insert statement"
+createInsertRow l values = do
+  x <- mapM (createSingleInsertSetter l) values
+  Result $ "(" ++ intercalate ", " x ++ ")"
+
+createSingleInsertSetter :: VariableLookup -> Setter -> Result String
+createSingleInsertSetter l (Setter (Field f) v) = do
   val <- toSqlValue l v
   Result $ "`" ++ f ++ "` = " ++ val
