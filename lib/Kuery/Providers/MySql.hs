@@ -24,18 +24,20 @@ executeMySqlQuery variables q =
     let l = variableLookup variables
     case q of
       -- Selection
-      Selection selections' skip' limit' filter' ordering' target' ->
-        do
-          select <- createSelect selections'
-          from <- createFrom target'
-          _where <- createWhere l filter'
-          orderBy <- createOrderBy ordering'
-          limit <- createLimit l limit'
-          offset <- createOffset l skip'
-          Result $ intercalate "" [select, from, _where, orderBy, limit, offset]
+      Selection selections' skip' limit' filter' ordering' target' -> do
+        select <- createSelect selections'
+        from <- createFrom target'
+        _where' <- createWhere l filter'
+        orderBy <- createOrderBy ordering'
+        limit <- createLimit l limit'
+        offset <- createOffset l skip'
+        Result $ intercalate "" [select, from, _where', orderBy, limit, offset]
       -- Update
-      Update filter' update' target' -> do
-        return ""
+      Update filter' setter' target' -> do
+        update <- createUpdate target'
+        set <- createSet l setter'
+        _where' <- createWhere l filter'
+        Result $ intercalate "" [update, set, _where']
       -- Insert
       Insert insert' target' -> do
         return ""
@@ -44,7 +46,7 @@ executeMySqlQuery variables q =
         return ""
 
 createSelect :: [Field] -> Result String
-createSelect [] = Result "Cannot create select clause. Not fields specified."
+createSelect [] = Result "No fields specified for select."
 createSelect fields = Result $ "SELECT " ++ intercalate "," (map (\(Field f) -> "`" ++ f ++ "`") fields)
 
 createFrom :: Maybe String -> Result String
@@ -137,3 +139,18 @@ variableLookup ((VariableValue name val) : fs) search =
   if name == search
     then Result val
     else variableLookup fs search
+
+createUpdate :: Maybe String -> Result String
+createUpdate Nothing = Error "No target specified for update statement."
+createUpdate (Just t) = Result $ "UPDATE `" ++ t ++ "`"
+
+createSet :: VariableLookup -> [Setter] -> Result String
+createSet _ [] = Error "No setters specified for update statement."
+createSet l setters = do
+  s <- mapM (createSingleSet l) setters
+  Result $ " SET " ++ intercalate ", " s
+
+createSingleSet :: VariableLookup -> Setter -> Result String
+createSingleSet l (Setter (Field f) v) = do
+  val <- toSqlValue l v
+  Result $ "`" ++ f ++ "` = " ++ val
