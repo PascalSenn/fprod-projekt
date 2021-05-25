@@ -16,4 +16,4 @@ data RecordValue
 
 getValueFromRecord :: String -> Record -> Maybe RecordValue
 getValueFromRecord _ [] = Nothing
-getValueFromRecord label ((RecordField l v) : xs) = if l == label then Just v else getValueFromRecord l xs
+getValueFromRecord label ((RecordField l v) : xs) = if l == label then Just v else getValueFromRecord label xs

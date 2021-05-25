@@ -4,6 +4,8 @@ import Control.Monad.State
 import Kuery.Language.Base
 import Kuery.Result
 
+data Provider = MongoProvider | MySqlProvider deriving (Show)
+
 connect :: String -> String -> IO DatabaseConnection
 connect h d = do
   return

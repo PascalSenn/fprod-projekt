@@ -1,31 +1,28 @@
 module Main where
 
-import qualified Example.Mongo.Function as Mongo
-import qualified Example.Mongo.Monad as MongoM
-import qualified Example.MySql.Monad as MySqlM
+import qualified Example.Function as FnExample
+import qualified Example.Monad as MonadExample
+import Kuery.Connection
 import Kuery.Language.Base
 import Kuery.Monad.Operations
 import Kuery.Providers.MySql
+import Kuery.Result
 
 main :: IO ()
 main = do
   putStrLn "(m)ongo / (s)ql"
-  db <- readNextChar
-  case db of
-    'm' -> do
+  dbName <- readNextChar
+  case getProvider dbName of
+    (Error e) -> putStrLn e
+    (Result p) -> do
       putStrLn "(m)onad / (f)unction chain"
       kind <- readNextChar
       case kind of
-        'm' -> MongoM.pageUsersM 0 10
-        'f' -> Mongo.pageUsers 0 10
+        'm' -> MonadExample.pageUsersM p 0 10
+        'f' -> FnExample.pageUsers p 0 10
         _ -> do
           putStrLn "Unknown input"
           main
-    's' -> do
-      MySqlM.pageUsersM_sql 0 10
-    _ -> do
-      putStrLn "Unknown input"
-      main
 
 readNextChar :: IO Char
 readNextChar = do
@@ -33,3 +30,8 @@ readNextChar = do
   case char of
     '\n' -> readNextChar
     _ -> pure char
+
+getProvider :: Char -> Result Provider
+getProvider 'm' = Result MongoProvider
+getProvider 's' = Result MySqlProvider
+getProvider p = Error $ "Unknown provider " ++ show p
