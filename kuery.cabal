@@ -10,7 +10,7 @@ common common-properties
   default-language: Haskell2010
   build-depends:
     base >=4.13 && <5
-    ,mongoDB >= 2.7.0.0 
+    ,mongoDB >= 2.7.0.0
     ,text
     ,mtl
   ghc-options:
@@ -18,7 +18,20 @@ common common-properties
 
 library
   import:              common-properties
-  exposed-modules:     Kuery.Result, Kuery.Connection, Kuery.Providers.Mongo.Base, Kuery.Providers.Mongo, Kuery.Providers.MySql, Kuery.Providers.MySql.Base, Kuery.Helpers, Kuery.Language.Value, Kuery.Language.Operators, Kuery.Language.Base, Kuery.Monad.Operations, Kuery.Operations, Kuery
+  exposed-modules:     Kuery.Result,
+                       Kuery.Connection,
+                       Kuery.Providers.Mongo.Base,
+                       Kuery.Providers.Mongo,
+                       Kuery.Providers.MySql,
+                       Kuery.Providers.MySql.Base,
+                       Kuery.Helpers,
+                       Kuery.Language.Value,
+                       Kuery.Language.Operators,
+                       Kuery.Language.Base,
+                       Kuery.Language.Result,
+                       Kuery.Monad.Operations,
+                       Kuery.Operations,
+                       Kuery
   build-depends:       
   hs-source-dirs:      lib
 

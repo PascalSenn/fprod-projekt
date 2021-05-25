@@ -5,6 +5,7 @@ import Database.MongoDB (ObjectId, at)
 import Kuery.Connection
 import Kuery.Language.Base
 import Kuery.Language.Operators
+import Kuery.Language.Result
 import Kuery.Language.Value
 import Kuery.Operations
 import Kuery.Providers.Mongo.Base
@@ -48,11 +49,11 @@ pageUsers skip'' limit'' = do
         `_limit` Variable "limit"
     printUser user =
       putStrLn
-        ( show (at (pack "_id") user :: ObjectId)
+        ( show (getValueFromRecord "_id" user)
             ++ "    "
-            ++ at (pack "firstName") user
+            ++ show (getValueFromRecord "firstName" user)
             ++ "    "
-            ++ at (pack "lastName") user
+            ++ show (getValueFromRecord "lastName" user)
         )
 
 selectQuery :: Query
