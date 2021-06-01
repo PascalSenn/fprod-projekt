@@ -1,15 +1,19 @@
 module Kuery.Providers.Mongo.Base where
 
 import Control.Monad.State
-import Data.Text
+import Data.Text (pack, unpack)
 import qualified Database.MongoDB as Mongo
 import Kuery.Connection
+  ( DatabaseConnection (databaseName, host),
+    Executor (..),
+  )
 import Kuery.Language.Base
-import Kuery.Providers.Mongo
+import Kuery.Language.Result
 import Kuery.Monad.Operations
+import Kuery.Providers.Mongo
 import Kuery.Result
 
-toMongo :: DatabaseConnection -> IO (Executor Mongo.Document)
+toMongo :: DatabaseConnection -> IO (Executor Record)
 toMongo conf = do
   return
     Executor
@@ -18,7 +22,7 @@ toMongo conf = do
         runM = mongoExecutorM conf
       }
 
-mongoExecutor :: DatabaseConnection -> Query -> [VariableValue] -> IO (Result [Mongo.Document])
+mongoExecutor :: DatabaseConnection -> Query -> [VariableValue] -> IO (Result RecordList)
 mongoExecutor con q variables =
   do
     p <- Mongo.connect $ Mongo.host (host con)
@@ -27,11 +31,27 @@ mongoExecutor con q variables =
       Error a -> do return (Error a)
       Result query -> do
         res <- r query
-        return (Result res)
+        pure $ mapM documentToRecord res
 
-mongoExecutorM :: DatabaseConnection -> State (Result Query) () -> [VariableValue] -> IO (Result [Mongo.Document])
+mongoExecutorM :: DatabaseConnection -> State (Result Query) () -> [VariableValue] -> IO (Result RecordList)
 mongoExecutorM con stateQuery variables = do
   let resultQuery = evalState (stateQuery >> _evaluate) (Error "Not valid query specified")
   case resultQuery of
     Error e -> return (Error e)
-    Result query -> mongoExecutor con query variables 
+    Result query -> mongoExecutor con query variables
+
+documentToRecord :: Mongo.Document -> Result Record
+documentToRecord = mapM fieldToRecordField
+
+fieldToRecordField :: Mongo.Field -> Result RecordField
+fieldToRecordField f = do
+  val <- fieldToRecordValue (Mongo.value f)
+  pure $ RecordField (unpack (Mongo.label f)) val
+
+fieldToRecordValue :: Mongo.Value -> Result RecordValue
+fieldToRecordValue (Mongo.Float d) = Result $ RecordValueDouble d
+fieldToRecordValue (Mongo.String t) = Result $ RecordValueString (unpack t)
+fieldToRecordValue (Mongo.ObjId i) = Result $ RecordValueString (show i)
+fieldToRecordValue (Mongo.Bool b) = Result $ RecordValueBool b
+fieldToRecordValue Mongo.Null = Result RecordValueNull
+fieldToRecordValue v = Error $ "Could not parse Mongo.Value " ++ show v

@@ -1,31 +1,38 @@
-module Example.MySql.Monad where
+module Example.Monad where
 
 import Data.Text
 import Database.MongoDB (ObjectId, at)
 import Kuery.Connection
 import Kuery.Language.Base
 import Kuery.Language.Operators
+import Kuery.Language.Result
 import Kuery.Language.Value
 import Kuery.Monad.Operations
+import Kuery.Providers.Mongo.Base
 import Kuery.Providers.MySql.Base
 import Kuery.Result
 
-pageUsersM_sql :: Int -> Int -> IO ()
-pageUsersM_sql skip'' limit'' = do
+pageUsersM :: Provider -> IO DatabaseConnection -> Int -> Int -> IO ()
+pageUsersM provider con skip'' limit'' = do
   let limit' = if limit'' < 10 then 10 else limit''
   let skip' = if skip'' < 0 then 0 else skip''
   putStrLn ("Users " ++ show skip' ++ " - " ++ show (skip' + limit'))
 
   res <-
-    connect "127.0.0.1" "kuery"
-      >>= enableLogging
-      >>= toMySql
-      >>= executeM userPageQuery [var "skip" skip', var "limit" limit']
+    case provider of
+      MongoProvider ->
+        con >>= enableLogging
+          >>= toMongo
+          >>= executeM userPageQuery [var "skip" skip', var "limit" limit']
+      MySqlProvider ->
+        con >>= enableLogging
+          >>= toMySql
+          >>= executeM userPageQuery [var "skip" skip', var "limit" limit']
 
   case res of
     Error a -> putStrLn a
     Result res' -> do
-      putStr (show res')
+      mapM_ printUser res'
       if limit' > 10
         then putStr "(l)ess/"
         else pure ()
@@ -36,11 +43,11 @@ pageUsersM_sql skip'' limit'' = do
       putStrLn "(n)ext"
       userInput <- getChar
       case userInput of
-        'n' -> pageUsersM_sql (skip' + limit') limit'
-        'l' -> pageUsersM_sql skip' (limit' - 10)
-        'm' -> pageUsersM_sql skip' (limit' + 10)
-        'p' -> pageUsersM_sql (skip' - limit') limit'
-        _ -> pageUsersM_sql skip' limit'
+        'n' -> pageUsersM provider con (skip' + limit') limit'
+        'l' -> pageUsersM provider con skip' (limit' - 10)
+        'm' -> pageUsersM provider con skip' (limit' + 10)
+        'p' -> pageUsersM provider con (skip' - limit') limit'
+        _ -> pageUsersM provider con skip' limit'
   where
     userPageQuery =
       do
@@ -49,13 +56,13 @@ pageUsersM_sql skip'' limit'' = do
         _orderBy [Asc "firstName"]
         _skip (Variable "skip")
         _limit (Variable "limit")
-    printUser user =
+    printUser user = do
       putStrLn
-        ( show (at (pack "_id") user :: ObjectId)
+        ( show (getValueFromRecord "_id" user)
             ++ "    "
-            ++ at (pack "firstName") user
+            ++ show (getValueFromRecord "firstName" user)
             ++ "    "
-            ++ at (pack "lastName") user
+            ++ show (getValueFromRecord "lastName" user)
         )
 
 selectQuery :: MonadQuery

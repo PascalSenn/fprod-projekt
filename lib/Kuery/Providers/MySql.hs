@@ -4,9 +4,6 @@ module Kuery.Providers.MySql (executeMySqlQuery) where
 
 import Control.Monad.Cont
 import Data.List (intercalate)
-import Data.Text (pack)
-import qualified Database.MongoDB as Mongo
-import Kuery.Connection
 import Kuery.Language.Base
   ( Field (..),
     Filter (..),
@@ -18,7 +15,7 @@ import Kuery.Language.Base
 import Kuery.Language.Value
 import Kuery.Result
 
-executeMySqlQuery :: [VariableValue] -> Query -> Result (String)
+executeMySqlQuery :: [VariableValue] -> Query -> Result String
 executeMySqlQuery variables q =
   do
     let l = variableLookup variables
@@ -162,12 +159,13 @@ createSingleSet l (Setter (Field f) v) = do
 createInsertInto :: Maybe String -> [[Setter]] -> Result String
 createInsertInto Nothing _ = Error "No target specified for insert statement."
 createInsertInto (Just t) values = do
-  if null (head values)
-    then Error "No fields specified for insert statement"
-    else
-      if allEqual (map extractFieldNamesFromRows values)
-        then Result $ "INSERT INTO `" ++ t ++ "` (" ++ intercalate ", " (head (map extractFieldNamesFromRows values)) ++ ")"
-        else Error "Fields for specified insert values are not equal"
+  when
+    (null (head values))
+    (Error "No fields specified for insert statement")
+  unless
+    (allEqual (map extractFieldNamesFromRows values))
+    (Error "Fields for specified insert values are not equal")
+  Result $ "INSERT INTO `" ++ t ++ "` (" ++ intercalate ", " (head (map extractFieldNamesFromRows values)) ++ ")"
 
 allEqual :: Eq a => [a] -> Bool
 allEqual [] = True
