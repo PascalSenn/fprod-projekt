@@ -11,8 +11,12 @@ common common-properties
   build-depends:
     base >=4.13 && <5
     ,mongoDB >= 2.7.0.0
+    ,mysql-haskell >= 0.8.4.3
+    ,bytestring
+    ,io-streams >= 1.2
     ,text
     ,mtl
+    ,utf8-string
   ghc-options:
     -Wall
 

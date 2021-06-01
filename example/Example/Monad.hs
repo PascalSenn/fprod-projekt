@@ -12,8 +12,8 @@ import Kuery.Providers.Mongo.Base
 import Kuery.Providers.MySql.Base
 import Kuery.Result
 
-pageUsersM :: Provider -> Int -> Int -> IO ()
-pageUsersM provider skip'' limit'' = do
+pageUsersM :: Provider -> IO DatabaseConnection -> Int -> Int -> IO ()
+pageUsersM provider con skip'' limit'' = do
   let limit' = if limit'' < 10 then 10 else limit''
   let skip' = if skip'' < 0 then 0 else skip''
   putStrLn ("Users " ++ show skip' ++ " - " ++ show (skip' + limit'))
@@ -21,13 +21,11 @@ pageUsersM provider skip'' limit'' = do
   res <-
     case provider of
       MongoProvider ->
-        connect "127.0.0.1" "kuery"
-          >>= enableLogging
+        con >>= enableLogging
           >>= toMongo
           >>= executeM userPageQuery [var "skip" skip', var "limit" limit']
       MySqlProvider ->
-        connect "127.0.0.1" "kuery"
-          >>= enableLogging
+        con >>= enableLogging
           >>= toMySql
           >>= executeM userPageQuery [var "skip" skip', var "limit" limit']
 
@@ -45,11 +43,11 @@ pageUsersM provider skip'' limit'' = do
       putStrLn "(n)ext"
       userInput <- getChar
       case userInput of
-        'n' -> pageUsersM provider (skip' + limit') limit'
-        'l' -> pageUsersM provider skip' (limit' - 10)
-        'm' -> pageUsersM provider skip' (limit' + 10)
-        'p' -> pageUsersM provider (skip' - limit') limit'
-        _ -> pageUsersM provider skip' limit'
+        'n' -> pageUsersM provider con (skip' + limit') limit'
+        'l' -> pageUsersM provider con skip' (limit' - 10)
+        'm' -> pageUsersM provider con skip' (limit' + 10)
+        'p' -> pageUsersM provider con (skip' - limit') limit'
+        _ -> pageUsersM provider con skip' limit'
   where
     userPageQuery =
       do

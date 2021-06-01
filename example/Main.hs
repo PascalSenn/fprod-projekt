@@ -18,7 +18,7 @@ main = do
       putStrLn "(m)onad / (f)unction chain"
       kind <- readNextChar
       case kind of
-        'm' -> MonadExample.pageUsersM p 0 10
+        'm' -> MonadExample.pageUsersM p (getDatabaseConnection p) 0 10
         'f' -> FnExample.pageUsers p 0 10
         _ -> do
           putStrLn "Unknown input"
@@ -35,3 +35,7 @@ getProvider :: Char -> Result Provider
 getProvider 'm' = Result MongoProvider
 getProvider 's' = Result MySqlProvider
 getProvider p = Error $ "Unknown provider " ++ show p
+
+getDatabaseConnection :: Provider -> IO DatabaseConnection
+getDatabaseConnection MongoProvider = connect "127.0.0.1" "kuery"
+getDatabaseConnection MySqlProvider = connect "127.0.0.1" "kuery"

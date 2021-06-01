@@ -41,7 +41,7 @@ mongoExecutorM con stateQuery variables = do
     Result query -> mongoExecutor con query variables
 
 documentToRecord :: Mongo.Document -> Result Record
-documentToRecord doc = mapM fieldToRecordField doc
+documentToRecord = mapM fieldToRecordField
 
 fieldToRecordField :: Mongo.Field -> Result RecordField
 fieldToRecordField f = do
@@ -53,5 +53,5 @@ fieldToRecordValue (Mongo.Float d) = Result $ RecordValueDouble d
 fieldToRecordValue (Mongo.String t) = Result $ RecordValueString (unpack t)
 fieldToRecordValue (Mongo.ObjId i) = Result $ RecordValueString (show i)
 fieldToRecordValue (Mongo.Bool b) = Result $ RecordValueBool b
-fieldToRecordValue (Mongo.Null) = Result $ RecordValueNull
-fieldToRecordValue v = Error $ "Could not parse Mongo.Value " ++ (show v)
+fieldToRecordValue Mongo.Null = Result RecordValueNull
+fieldToRecordValue v = Error $ "Could not parse Mongo.Value " ++ show v

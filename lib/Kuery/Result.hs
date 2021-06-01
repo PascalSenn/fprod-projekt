@@ -1,6 +1,6 @@
 module Kuery.Result where
 
-data Result a = Error String | Result a
+data Result a = Error String | Result a deriving (Show)
 
 instance Functor Result where
   fmap _ (Error a) = Error a
