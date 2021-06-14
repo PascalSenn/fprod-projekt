@@ -25,28 +25,28 @@ Nachher kann durch die Liste von User navigiert werden. Dazu gibt es folgende In
 ## Ordnerstruktur
 
 - example
-- example/Main.hs                     Einstiegspunkt in die Demo Applikation (und DB Konfiguration)
-- example/Example/Function.hs         Demo Applikation mit Infix Functions
-- example/Example/Monad.hs            Demo Applikation mit Monad Syntax
+- example/Main.hs                     (Einstiegspunkt in die Demo Applikation (und DB Konfiguration))
+- example/Example/Function.hs         (Demo Applikation mit Infix Functions)
+- example/Example/Monad.hs            (Demo Applikation mit Monad Syntax)
 - lib                             
 - lib/Kuery
-- lib/Kuery/Language                  In diesem Ordner sind die Typen die von aussen verwendet werden. Sozusagen die API des Query Builder
-- lib/Kuery/Language/Base.hs          Grundlegende Typen für CRUD Statements
-- lib/Kuery/Language/Operators.hs     Convenience Operatoren die in den Statements verwendet werden können
-- lib/Kuery/Language/Result.hs        Rückgabetyp eines Statements
-- lib/Kuery/Language/Value.hs         Variablen
+- lib/Kuery/Language                  (In diesem Ordner sind die Typen die von aussen verwendet werden. Sozusagen die API des Query Builder)
+- lib/Kuery/Language/Base.hs          (Grundlegende Typen für CRUD Statements)
+- lib/Kuery/Language/Operators.hs     (Convenience Operatoren die in den Statements verwendet werden können)
+- lib/Kuery/Language/Result.hs        (Rückgabetyp eines Statements)
+- lib/Kuery/Language/Value.hs         (Variablen)
 - lib/Kuery/Monad              
 - lib/Kuery/Monad/Operations.hs              
 - lib/Kuery/Providers  
 - lib/Kuery/Providers/Mongo              
-- lib/Kuery/Providers/Mongo/Base.hs   Anbindung an Mongo Datenbank
+- lib/Kuery/Providers/Mongo/Base.hs   (Anbindung an Mongo Datenbank)
 - lib/Kuery/Providers/MySql              
-- lib/Kuery/Providers/MySql/Base.hs   Anbindung an MySQL Datenbank        
-- lib/Kuery/Providers/Mongo.hs        Implementierung für MongoDB     
-- lib/Kuery/Providers/MySql.hs        Implementierung für MySQL 
+- lib/Kuery/Providers/MySql/Base.hs   (Anbindung an MySQL Datenbank)        
+- lib/Kuery/Providers/Mongo.hs        (Implementierung für MongoDB)     
+- lib/Kuery/Providers/MySql.hs        (Implementierung für MySQL)
 - lib/Kuery/Connection.hs             
 - lib/Kuery/Helpers.hs            
 - lib/Kuery/Operations.hs       
-- lib/Kuery/Result.hs                 Monad für Fehlerbehandlung
+- lib/Kuery/Result.hs                 (Monad für Fehlerbehandlung)
 - lib/Kuery.hs
 - kuery.cabal        
