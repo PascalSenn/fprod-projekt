@@ -3,6 +3,7 @@
 module Kuery.Providers.MySql.Base where
 
 import Control.Monad.State
+import qualified Data.ByteString.Char8 as C
 import Data.ByteString.Lazy.UTF8 as BLU
 import qualified Data.Text as Text
 import qualified Database.MySQL.Base as MySQL
@@ -28,7 +29,7 @@ mySqlExecutor con q variables =
   do
     conn <-
       MySQL.connect
-        MySQL.defaultConnectInfo {MySQL.ciUser = "root", MySQL.ciPassword = "password", MySQL.ciDatabase = "fprod"}
+        MySQL.defaultConnectInfo {MySQL.ciUser = "root", MySQL.ciPassword = "password", MySQL.ciDatabase = C.pack (databaseName con)}
     case createMySqlQuery variables q of
       Error a -> do return (Error a)
       Result query -> do
