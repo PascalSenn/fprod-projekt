@@ -3,10 +3,7 @@
 module Kuery.Providers.MySql.Base where
 
 import Control.Monad.State
-import qualified Data.ByteString as B
-import Data.ByteString.Lazy.Char8 as Char8
 import Data.ByteString.Lazy.UTF8 as BLU
-import Data.Char (ord)
 import qualified Data.Text as Text
 import qualified Database.MySQL.Base as MySQL
 import Kuery.Connection

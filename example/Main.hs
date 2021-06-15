@@ -3,9 +3,6 @@ module Main where
 import qualified Example.Function as FnExample
 import qualified Example.Monad as MonadExample
 import Kuery.Connection
-import Kuery.Language.Base
-import Kuery.Monad.Operations
-import Kuery.Providers.MySql
 import Kuery.Result
 
 main :: IO ()

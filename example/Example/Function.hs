@@ -1,7 +1,5 @@
 module Example.Function where
 
-import Data.Text
-import Database.MongoDB (ObjectId, at)
 import Kuery.Connection
 import Kuery.Language.Base
 import Kuery.Language.Operators
