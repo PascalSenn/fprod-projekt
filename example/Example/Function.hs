@@ -43,13 +43,7 @@ pageUsers provider skip'' limit'' = do
         then putStr "(p)revious/"
         else pure ()
       putStrLn "(n)ext"
-      userInput <- getChar
-      case userInput of
-        'n' -> pageUsers provider (skip' + limit') limit'
-        'l' -> pageUsers provider skip' (limit' - 10)
-        'm' -> pageUsers provider skip' (limit' + 10)
-        'p' -> pageUsers provider (skip' - limit') limit'
-        _ -> pageUsers provider skip' limit'
+      waitForNextInput skip' limit'
   where
     userPageQuery =
       _select ["firstName", "lastName", "_id"] `_from` "users"
@@ -64,6 +58,14 @@ pageUsers provider skip'' limit'' = do
             ++ "    "
             ++ show (getValueFromRecord "lastName" user)
         )
+    waitForNextInput skip' limit' = do
+      userInput <- getChar
+      case userInput of
+        'n' -> pageUsers provider (skip' + limit') limit'
+        'l' -> pageUsers provider skip' (limit' - 10)
+        'm' -> pageUsers provider skip' (limit' + 10)
+        'p' -> pageUsers provider (skip' - limit') limit'
+        _ -> waitForNextInput skip' limit'
 
 selectQuery :: Query
 selectQuery =

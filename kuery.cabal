@@ -35,9 +35,11 @@ library
                        Kuery.Language.Result,
                        Kuery.Monad.Operations,
                        Kuery.Operations,
-                       Kuery
+                       Kuery,
+                       Example.Monad,
+                       Example.Function
   build-depends:       
-  hs-source-dirs:      lib
+  hs-source-dirs:      lib,example
 
 executable example
   import:              common-properties

@@ -41,13 +41,7 @@ pageUsersM provider con skip'' limit'' = do
         then putStr "(p)revious/"
         else pure ()
       putStrLn "(n)ext"
-      userInput <- getChar
-      case userInput of
-        'n' -> pageUsersM provider con (skip' + limit') limit'
-        'l' -> pageUsersM provider con skip' (limit' - 10)
-        'm' -> pageUsersM provider con skip' (limit' + 10)
-        'p' -> pageUsersM provider con (skip' - limit') limit'
-        _ -> pageUsersM provider con skip' limit'
+      waitForNextInput skip' limit'
   where
     userPageQuery =
       do
@@ -64,6 +58,14 @@ pageUsersM provider con skip'' limit'' = do
             ++ "    "
             ++ show (getValueFromRecord "lastName" user)
         )
+    waitForNextInput skip' limit' = do
+      userInput <- getChar
+      case userInput of
+        'n' -> pageUsersM provider con (skip' + limit') limit'
+        'l' -> pageUsersM provider con skip' (limit' - 10)
+        'm' -> pageUsersM provider con skip' (limit' + 10)
+        'p' -> pageUsersM provider con (skip' - limit') limit'
+        _ -> waitForNextInput skip' limit'
 
 selectQuery :: MonadQuery
 selectQuery =
