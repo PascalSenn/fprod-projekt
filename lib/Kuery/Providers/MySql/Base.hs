@@ -3,10 +3,7 @@
 module Kuery.Providers.MySql.Base where
 
 import Control.Monad.State
-import qualified Data.ByteString as B
-import Data.ByteString.Lazy.Char8 as Char8
 import Data.ByteString.Lazy.UTF8 as BLU
-import Data.Char (ord)
 import qualified Data.Text as Text
 import qualified Database.MySQL.Base as MySQL
 import Kuery.Connection
@@ -32,9 +29,14 @@ mySqlExecutor con q variables =
     conn <-
       MySQL.connect
         MySQL.defaultConnectInfo {MySQL.ciUser = "root", MySQL.ciPassword = "password", MySQL.ciDatabase = "fprod"}
-    case executeMySqlQuery variables q of
+    case createMySqlQuery variables q of
       Error a -> do return (Error a)
       Result query -> do
+        if logQueries con
+          then do
+            Prelude.putStrLn "Query="
+            print query
+          else pure ()
         (defs, inputStream) <- MySQL.query_ conn (stringToQuery query)
         records <- Streams.toList inputStream
         pure $ mapM (mySqlResultToRecord defs) records

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Kuery.Providers.MySql (executeMySqlQuery) where
+module Kuery.Providers.MySql (createMySqlQuery) where
 
 import Control.Monad.Cont
 import Data.List (intercalate)
@@ -15,8 +15,8 @@ import Kuery.Language.Base
 import Kuery.Language.Value
 import Kuery.Result
 
-executeMySqlQuery :: [VariableValue] -> Query -> Result String
-executeMySqlQuery variables q =
+createMySqlQuery :: [VariableValue] -> Query -> Result String
+createMySqlQuery variables q =
   do
     let l = variableLookup variables
     case q of
